@@ -4,6 +4,9 @@
 // structure of node
 struct Node {
     int data;
+    // for previous node
+    struct Node *prev;
+    // for next node
     struct Node *next;
 };
 
@@ -19,68 +22,89 @@ void printList(struct Node*head) {
 }
 
 
-// function to add a new node in the list
-// return the address of newly added node
-struct Node* appendItem() {
+// function to add new node to list
+struct Node* addToList() {
     struct Node *newNode = (struct Node*)malloc(sizeof(struct Node));
-    printf("Enter value of node: ");
+    printf("Enter data: ");
     scanf("%d", &newNode->data);
+    newNode->prev = NULL;
     newNode->next = NULL;
     return newNode;
-}
+} 
 
 
-// delete a node with given key
-// return the head
-struct Node* deleteNode(struct Node *head, int key) {
-    struct Node *temp = head, *prev = NULL;
+// delete a node from list
+struct Node* deleteNode(struct Node*head, int key) {
+    struct Node *temp = head, *temp2 = NULL;
 
-    // if element is present at the head itself
+    // if node is head
     if(temp != NULL && temp->data == key) {
-        head = temp->next;
+        // update head and it's prev and next
+        temp2 = temp->next;
+        temp2->prev = NULL;
+        head = temp2;
         free(temp);
         return head;
     }
 
-    // finding the node with the key
-    while(temp != NULL && temp->data != key) {
-        prev = temp;
-        temp = temp->next;
+    // find the element in the list
+    while (temp != NULL && temp->data != key) {
+        temp = temp -> next;
     }
 
-    // if not exists
-    if (temp == NULL) {
-        printf("Element doesn't exist in the list.\n");
+    // if element not found
+    if(temp == NULL) {
+        printf("Element not found\n");
         return head;
     }
-
-    // remove the node
-    prev->next = temp->next;
+    
+    // remove element 
+    // update next and prev for that element
+    if(temp -> next != NULL) {
+        temp -> next -> prev = temp -> prev;
+    }
+    if(temp -> prev != NULL) {
+        temp -> prev -> next = temp -> next;
+    }
+    
+    // free the memory
     free(temp);
-    // return head
     return head;
 }
 
-// function to reverse the list
-struct Node* reverseList(struct Node*head) {
-    // pointer for storing current, prev, next node
-    struct Node *temp = head, *prev=NULL, *next=NULL;
-    // swap node address
-    while(temp->next != NULL) {
-        next = temp->next;
-        temp->next = prev;
-        prev = temp;
-        temp = next;
+// print list in reverse order
+void printInReverser(struct Node *head) {
+    struct Node *temp = head, *tail = head;
+    while (temp->next != NULL) {
+        temp = temp -> next;
     }
-    // update the head
-    temp->next = prev;
+    tail = temp;
+    while (tail != NULL) {
+        printf("%d, ", tail->data);
+        tail = tail -> prev;
+    }
+    printf("\n");
+}
+
+// reverse the list
+struct Node* reverseList(struct Node *head) {
+    struct Node *temp = head, *swapHelper = NULL;
+    while (temp -> next != NULL) {
+        swapHelper = temp -> next;
+        temp -> next = temp -> prev;
+        temp -> prev = swapHelper;
+        temp = swapHelper;
+    }
+
+    temp -> next = temp -> prev;
+    temp -> prev = NULL;
     head = temp;
     return head;
 }
 
 int main () {
     // pointer variables
-    struct Node *head=NULL, *temp=NULL, *newNode=NULL;
+    struct Node *head=NULL, *temp=NULL, *newNode=NULL, *prev = NULL;
     int choice;
 
     printf("1. Insert At End\n");
@@ -88,9 +112,11 @@ int main () {
     printf("3. Print List\n");
     printf("4. Delete An Element\n");
     printf("5. Reverse the list\n");
+    printf("6. Print in reverse\n");
     printf("Press 0 for exit\n");
 
     do {
+        
         printf("Enter choice: ");
         scanf("%d", &choice);
 
@@ -99,20 +125,23 @@ int main () {
         {   
             // appending new elements at the end of the list
             case 1:
-                newNode = appendItem();
+                newNode = addToList();
                 // for the first element in the list
                 if( head == NULL) {
-                    head = temp = newNode;
+                    head = temp = prev = newNode;
                 } else {
+                    newNode -> prev = prev;
                     temp -> next = newNode;
+                    prev = newNode;
                     temp = newNode;
                 }
                 break;
             
             // for adding new element at the beginning of the list
             case 2:
-                newNode = appendItem();
+                newNode = addToList();
                 // udpate head
+                head -> prev = newNode;
                 newNode -> next = head;
                 if(temp == head) {
                     temp = newNode;
@@ -134,8 +163,14 @@ int main () {
                 head = deleteNode(head, key);
                 break;
 
+            // reverse the list
             case 5:
                 head = reverseList(head);
+                break;
+
+            // print list in reverse order
+            case 6:
+                printInReverser(head);
                 break;
 
             // break out of the loop
@@ -145,5 +180,6 @@ int main () {
 
     } while (choice != 0);
 
+    printList(head);
     return 0;
 }
